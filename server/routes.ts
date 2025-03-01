@@ -2,13 +2,43 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer } from "ws";
 import { storage } from "./storage";
-import { generateMockNodes, generateMockMetrics } from "@shared/schema";
+import { 
+  generateMockNodes, 
+  generateMockMetrics, 
+  generatePathPoints,
+  type SimulatedPath 
+} from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const mockNodes = generateMockNodes(10);
 
+  // Generate simulated paths for drone nodes
+  const simulatedPaths: SimulatedPath[] = mockNodes
+    .filter(node => node.type === "drone")
+    .map(node => ({
+      id: node.id,
+      nodeId: node.id,
+      pathType: ["linear", "circular", "random"][Math.floor(Math.random() * 3)] as "linear" | "circular" | "random",
+      startX: node.x.toString(),
+      startY: node.y.toString(),
+      endX: (Number(node.x) + Math.random() * 200 - 100).toString(),
+      endY: (Number(node.y) + Math.random() * 200 - 100).toString(),
+      speed: (1 + Math.random() * 4).toString(), // 1-5 units per second
+      startTime: new Date(),
+      active: true
+    }));
+
   app.get("/api/nodes", (_req, res) => {
-    res.json(mockNodes);
+    // Update node positions based on paths
+    const updatedNodes = mockNodes.map(node => {
+      const path = simulatedPaths.find(p => p.nodeId === node.id);
+      if (path && node.type === "drone") {
+        const position = generatePathPoints(path, new Date());
+        return { ...node, x: position.x, y: position.y };
+      }
+      return node;
+    });
+    res.json(updatedNodes);
   });
 
   app.get("/api/network-stats", (_req, res) => {
@@ -62,29 +92,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
 
   wss.on('connection', (ws) => {
-    console.log('Client connected to performance metrics stream');
+    console.log('Client connected to real-time updates');
 
     // Send initial data
-    const initialData = mockNodes.map(node => ({
-      nodeId: node.id,
-      metrics: generateMockMetrics(node.id)
-    }));
-    ws.send(JSON.stringify({ type: 'metrics', data: initialData }));
+    const initialData = {
+      nodes: mockNodes.map(node => {
+        const path = simulatedPaths.find(p => p.nodeId === node.id);
+        if (path && node.type === "drone") {
+          const position = generatePathPoints(path, new Date());
+          return { ...node, x: position.x, y: position.y };
+        }
+        return node;
+      }),
+      metrics: mockNodes.map(node => ({
+        nodeId: node.id,
+        metrics: generateMockMetrics(node.id)
+      }))
+    };
+    ws.send(JSON.stringify({ type: 'initialState', data: initialData }));
 
     // Start sending periodic updates
     const interval = setInterval(() => {
       if (ws.readyState === ws.OPEN) {
-        const updatedData = mockNodes.map(node => ({
-          nodeId: node.id,
-          metrics: generateMockMetrics(node.id)
-        }));
-        ws.send(JSON.stringify({ type: 'metrics', data: updatedData }));
+        const updatedData = {
+          nodes: mockNodes.map(node => {
+            const path = simulatedPaths.find(p => p.nodeId === node.id);
+            if (path && node.type === "drone") {
+              const position = generatePathPoints(path, new Date());
+              return { ...node, x: position.x, y: position.y };
+            }
+            return node;
+          }),
+          metrics: mockNodes.map(node => ({
+            nodeId: node.id,
+            metrics: generateMockMetrics(node.id)
+          }))
+        };
+        ws.send(JSON.stringify({ type: 'update', data: updatedData }));
       }
-    }, 5000);
+    }, 1000); // Update every second
 
     ws.on('close', () => {
       clearInterval(interval);
-      console.log('Client disconnected from performance metrics stream');
+      console.log('Client disconnected from real-time updates');
     });
   });
 

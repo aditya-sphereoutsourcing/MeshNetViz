@@ -10,25 +10,44 @@ A real-time dashboard for monitoring and visualizing a mesh WiFi network. This a
 - Status indicators for online/offline nodes
 - Dynamic connection lines between nodes within proximity
 - Minimap for easy navigation in large networks
+- Real-time position updates
+- Interactive zoom and pan capabilities
+- Node status indicators with colored borders
+- Animated connection lines showing active data flow
 
 ### 2. Node Monitoring
 - Real-time status monitoring of all network nodes
-- Signal strength visualization
-- Battery level tracking
+- Signal strength visualization through line charts
+- Battery level tracking for each node
 - Connected clients counter
 - Status indicators with color coding
+- Detailed node information display:
+  - Type classification
+  - Signal strength in dBm
+  - Battery percentage
+  - Number of connected clients
+  - Last update timestamp
 
 ### 3. Coverage Map
 - Heat map visualization of network coverage
-- Signal strength indicators
+- Signal strength indicators with color gradients
 - Coverage optimization suggestions
 - Interactive zoom and pan capabilities
+- Detailed signal strength measurements
+- Coverage dead zone identification
+- Signal overlap areas visualization
+- Distance-based connection mapping
 
 ### 4. AI Recommendations
 - Intelligent suggestions for network optimization
 - Node placement recommendations
 - Coverage improvement strategies
 - Performance insights
+- Categorized recommendations:
+  - Optimization suggestions
+  - New node additions
+  - Performance improvements
+  - Coverage enhancements
 
 ## Technical Implementation
 
@@ -43,6 +62,7 @@ The network topology visualization uses React Flow for interactive node-based di
 - Status indicators:
   - Online: Green border
   - Offline: Red border
+  - Maintenance: Yellow indicator
 
 ### Backend API Endpoints
 - `/api/nodes`: Returns current network nodes with status
@@ -50,28 +70,79 @@ The network topology visualization uses React Flow for interactive node-based di
 - `/api/coverage`: Generates coverage data points
 - `/api/recommendations`: Returns AI-powered optimization suggestions
 
+### Node Types and Properties
+Each node in the network contains:
+- Unique identifier
+- Name descriptor
+- Type classification (drone/ground/solar)
+- Status indicator (online/offline/maintenance)
+- Position coordinates (x, y)
+- Battery level percentage
+- Signal strength measurement
+- Connected clients count
+- Last update timestamp
+
 ## Getting Started
 
-1. Install dependencies:
+1. Clone and Install Dependencies:
 ```bash
+# Install all required packages
 npm install
 ```
 
-2. Start the development server:
+2. Environment Setup:
+```bash
+# Create a .env file with required variables
+DATABASE_URL=your_database_url
+```
+
+3. Start the Development Server:
 ```bash
 npm run dev
 ```
 
-3. Open your browser to `http://localhost:5000`
+4. Build for Production:
+```bash
+npm run build
+```
+
+5. Start Production Server:
+```bash
+npm run start
+```
 
 ## Architecture
 
-- Frontend: React + TypeScript
-- State Management: TanStack Query (React Query)
-- Visualization: React Flow, Recharts
-- Styling: Tailwind CSS + shadcn/ui
-- Backend: Express.js
-- Database: PostgreSQL with Drizzle ORM
+### Frontend
+- **Framework**: React + TypeScript
+- **State Management**: TanStack Query (React Query)
+- **Visualization Libraries**:
+  - React Flow: Network topology
+  - Recharts: Performance charts
+- **Styling**: 
+  - Tailwind CSS
+  - shadcn/ui components
+- **Routing**: wouter
+
+### Backend
+- **Server**: Express.js
+- **Database**: PostgreSQL with Drizzle ORM
+- **API Structure**: RESTful endpoints
+- **Real-time Updates**: WebSocket support
+
+### Component Structure
+```
+client/src/
+├── components/
+│   ├── NetworkTopology.tsx   # Network visualization
+│   ├── NodeMonitoring.tsx    # Performance monitoring
+│   ├── CoverageMap.tsx       # Coverage visualization
+│   └── AiRecommendations.tsx # AI suggestions
+├── pages/
+│   └── dashboard.tsx         # Main dashboard layout
+└── lib/
+    └── queryClient.ts        # API communication
+```
 
 ## Data Model
 
@@ -101,3 +172,44 @@ npm run dev
   active: boolean;
 }
 ```
+
+## Performance Considerations
+
+### Network Optimization
+- Automatic node distance calculation
+- Signal strength optimization
+- Coverage area maximization
+- Client load balancing
+
+### Real-time Updates
+- Efficient data polling
+- WebSocket support for live updates
+- Optimized state management
+- Minimal re-renders
+
+## Deployment
+
+The application is designed to be deployed on Replit:
+1. The server runs on port 5000
+2. Static assets are served through the Express.js server
+3. API endpoints are prefixed with `/api`
+4. Database connections are managed through environment variables
+
+## Future Enhancements
+1. Advanced network simulation with mock drone/robot paths
+2. Enhanced AI-powered optimization suggestions
+3. Network health monitoring and alerts
+4. Coverage optimization tools
+5. Real-time performance analytics
+6. Historical data tracking and trends
+7. Advanced node management capabilities
+8. Custom alert configurations
+
+## Contributing
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+MIT License

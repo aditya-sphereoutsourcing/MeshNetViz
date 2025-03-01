@@ -19,20 +19,30 @@ type ProcessedDataPoint = {
 export default function PerformanceHeatMap() {
   const [performanceData, setPerformanceData] = useState<PerformanceData[]>([]);
   const [selectedMetric, setSelectedMetric] = useState<'signalStrength' | 'latency' | 'throughput'>('signalStrength');
-  
+  const [wsConnected, setWsConnected] = useState(false);
+
   const connectWebSocket = useCallback(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
     const ws = new WebSocket(wsUrl);
 
+    ws.onopen = () => {
+      console.log('Connected to performance metrics stream');
+      setWsConnected(true);
+    };
+
     ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
-      if (message.type === 'metrics') {
-        setPerformanceData(message.data);
+      if (message.type === 'initialState' || message.type === 'update') {
+        if (message.data.metrics) {
+          setPerformanceData(message.data.metrics);
+        }
       }
     };
 
     ws.onclose = () => {
+      console.log('Disconnected from performance metrics stream');
+      setWsConnected(false);
       // Attempt to reconnect after a delay
       setTimeout(connectWebSocket, 5000);
     };
@@ -47,7 +57,7 @@ export default function PerformanceHeatMap() {
 
   // Process data for visualization
   const processedData: ProcessedDataPoint[] = performanceData.flatMap(({ nodeId, metrics }) => {
-    const baseValue = metrics[selectedMetric];
+    const baseValue = Math.abs(metrics[selectedMetric]);
     const prediction = calculatePrediction(metrics); // Simple prediction based on current values
 
     return [
@@ -70,7 +80,14 @@ export default function PerformanceHeatMap() {
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-medium">Network Performance Heat Map</h3>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            {wsConnected ? (
+              <span className="text-green-500">●</span>
+            ) : (
+              <span className="text-red-500">●</span>
+            )} Live Updates
+          </div>
           <select
             className="border rounded p-1"
             value={selectedMetric}

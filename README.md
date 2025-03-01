@@ -276,6 +276,50 @@ The application is designed to be deployed on Replit:
 4. Database connections are managed through environment variables
 5. WebSocket connections use the same port as HTTP
 
+## Deployment on Vercel
+
+### Prerequisites
+1. A Vercel account
+2. Vercel CLI installed (`npm i -g vercel`)
+3. Your project pushed to a Git repository (GitHub, GitLab, or Bitbucket)
+
+### Deployment Steps
+
+1. **Prepare Environment Variables**
+   ```bash
+   # Create a new file .env.production
+   DATABASE_URL=your_production_database_url
+   # Add any other required environment variables
+   ```
+
+2. **Login to Vercel**
+   ```bash
+   vercel login
+   ```
+
+3. **Deploy to Vercel**
+   ```bash
+   # Initial deployment
+   vercel
+
+   # For production deployment
+   vercel --prod
+   ```
+
+4. **Configure Project Settings**
+   - Go to your project settings in Vercel dashboard
+   - Add environment variables from `.env.production`
+   - Configure build settings if needed
+   - Set up custom domain if desired
+
+### WebSocket Alternative for Vercel
+Since Vercel doesn't support WebSocket connections directly, consider these alternatives:
+1. Use Pusher for real-time updates
+2. Implement Server-Sent Events (SSE)
+3. Use polling with increased frequency
+4. Consider a separate WebSocket server (e.g., on Heroku)
+
+
 ## Future Enhancements
 1. Enhanced AI-powered optimization algorithms
 2. Advanced path planning for drone nodes

@@ -23,6 +23,21 @@ export const connections = pgTable("connections", {
   active: boolean("active").default(true)
 });
 
+// New table for historical performance metrics
+export const performanceMetrics = pgTable("performance_metrics", {
+  id: serial("id").primaryKey(),
+  nodeId: integer("node_id").notNull(),
+  timestamp: timestamp("timestamp").defaultNow(),
+  signalStrength: integer("signal_strength").notNull(),
+  latency: integer("latency").notNull(), // ms
+  packetLoss: numeric("packet_loss").notNull(), // percentage
+  throughput: integer("throughput").notNull(), // bytes/sec
+  predictionWindow: integer("prediction_window"), // minutes ahead
+  predictedSignalStrength: integer("predicted_signal_strength"),
+  predictedLatency: integer("predicted_latency"),
+  predictedThroughput: integer("predicted_throughput")
+});
+
 export const insertNodeSchema = createInsertSchema(nodes).omit({ 
   id: true,
   lastUpdate: true 
@@ -32,10 +47,21 @@ export const insertConnectionSchema = createInsertSchema(connections).omit({
   id: true 
 });
 
+export const insertMetricsSchema = createInsertSchema(performanceMetrics).omit({
+  id: true,
+  timestamp: true,
+  predictionWindow: true,
+  predictedSignalStrength: true,
+  predictedLatency: true,
+  predictedThroughput: true
+});
+
 export type InsertNode = z.infer<typeof insertNodeSchema>;
 export type InsertConnection = z.infer<typeof insertConnectionSchema>;
+export type InsertMetrics = z.infer<typeof insertMetricsSchema>;
 export type Node = typeof nodes.$inferSelect;
 export type Connection = typeof connections.$inferSelect;
+export type PerformanceMetric = typeof performanceMetrics.$inferSelect;
 
 // Mock data generator
 export function generateMockNodes(count: number): Node[] {
@@ -51,4 +77,15 @@ export function generateMockNodes(count: number): Node[] {
     connectedClients: Math.floor(Math.random() * 50),
     lastUpdate: new Date()
   }));
+}
+
+// Generate mock performance metrics
+export function generateMockMetrics(nodeId: number): InsertMetrics {
+  return {
+    nodeId,
+    signalStrength: -1 * Math.floor(Math.random() * 60 + 40),
+    latency: Math.floor(Math.random() * 100),
+    packetLoss: Math.random() * 5,
+    throughput: Math.floor(Math.random() * 1000000)
+  };
 }
